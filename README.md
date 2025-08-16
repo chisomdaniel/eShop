@@ -15,8 +15,12 @@ This project is expected to be:
    - [ ] Product categories and tags
    - [ ] Product images and description
    - [ ] Stock quantity management
+   - [ ] Set low stock reminder
    - [ ] Pricing
    - [ ] Digital and physical product support
+   - [ ] Enable sub-category
+   - [ ] Enable product variant
+   - [ ] Allow backorder on empty stock
 
 2. Shopping cart:
    - [ ] Add/remove products to cart
@@ -41,3 +45,11 @@ This project is expected to be:
 
 6. Product Review
    - [ ] Customer review on product
+
+
+### Other features include:
+- [ ] Setting up proper and robost logging across all app.
+- [ ] Background job processing to speadup app performance when faced with time consuming task
+- [ ] Caching
+- [ ] Pagination
+- [ ] Throttling
