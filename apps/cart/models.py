@@ -48,8 +48,8 @@ class CartItem(models.Model):
             )
     
     class Meta:
-        verbose_name = "Cart"
-        verbose_name_plural = "Carts"
+        verbose_name = "Cart Item"
+        verbose_name_plural = "Cart Items"
         ordering = ["-created_at"]
         constraints = [
             models.UniqueConstraint(

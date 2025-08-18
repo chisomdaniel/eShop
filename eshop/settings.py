@@ -134,4 +134,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # APP SETTINGS
 AUTH_USER_MODEL = 'accounts.User'
+STORE_CURRENCY = 'NGN'
+"""The currency the store's products/service will be listed as internally.
+It must be a valid currency short code written in all capital letters
+and must be supported by the payment gateway. E.g. 'USD', 'EUR', 'GDP', 'NGN'"""
+
 

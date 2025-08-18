@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.conf import settings
 
 
 class Category(models.Model):
@@ -9,7 +10,7 @@ class Category(models.Model):
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
     name = models.CharField(max_length=500, unique=True)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -49,13 +50,6 @@ class Products(models.Model):
         draft = "draft", "Draft"
         active = "active", "Active"
         archived = "archived", "Archived"
-    
-    class Currency(models.TextChoices):
-        NAIRA = "NGN", "Naira (NGN)"
-        US_DOLLAR = "USD", "US dollar (USD)"
-        EURO = "EUR", "Euro (EUR)"
-        POUND = "GBP", "Pound sterling (GBP)"
-        CHINESE_YUAN = "CNY", "Chinese yuan (CNY)"
 
     id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
@@ -87,12 +81,6 @@ class Products(models.Model):
         default=ProductType.PHYSICAL,
         help_text="Identify if the product being listed is a physical or digital (downloadable) product or a service"
     )
-    currency = models.CharField(
-        max_length=5,
-        choices=Currency.choices,
-        default=Currency.US_DOLLAR,
-        help_text="Choose the currency for the price attached to this product"
-    )
     allow_backorder = models.BooleanField(
         default=False,
         help_text="Allow customers to keep placing order on a product after the available stock has finished"
@@ -122,7 +110,7 @@ class ProductImage(models.Model):
         default=uuid.uuid4, unique=True, primary_key=True, editable=False
     )
     image_url = models.URLField()
-    alt_text = models.TextField()
+    alt_text = models.TextField(blank=True)
     position = models.PositiveIntegerField(
         default=2,
         help_text="Identify the order which the product images will be displayed using numbers to repr first, second, etc. The first will be the cover image."
