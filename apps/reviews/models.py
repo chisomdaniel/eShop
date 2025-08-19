@@ -3,7 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-from apps.products.models import Products
+from apps.products.models import Product
 
 
 class Review(models.Model):
@@ -18,7 +18,7 @@ class Review(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Relationship
-    product = models.ForeignKey(Products, on_delete=models.CASCADE, related_name="reviews")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reviews")
 
     class Meta:

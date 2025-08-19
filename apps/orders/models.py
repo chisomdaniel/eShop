@@ -4,7 +4,8 @@ from django.db import models, IntegrityError, transaction
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
-from apps.products.models import Products
+from apps.products.models import Product
+from apps.discounts.models import Discounts
 from utils.generate_unique_id import generate_unique_id
 
 
@@ -43,7 +44,8 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # Relationship
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
+    customer = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
+    applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, related_name="orders_applied")
 
     class Meta:
         verbose_name = "Order"
@@ -70,7 +72,7 @@ class Order(models.Model):
     def subtotal(self):
         """The total price of all items before discount is removed
         or any other additional charges is added."""
-        subtotal = sum([i.subtotal for i in self.items])
+        subtotal = sum([i.subtotal for i in self.items.all()])
         return subtotal
 
     @property
@@ -95,7 +97,18 @@ class Order(models.Model):
     def total_amount(self):
         """Final price the customer will pay after discount has
         been removed and all fees have been added"""
-        return 0.00
+        return round(float(
+            (self.subtotal - self.discounts) + self.delivery_fee + self.other_fees), 2)
+
+    @property
+    def payment_status(self):
+        """Easily check the payment status from the model"""
+        return "UNPAID"
+    
+    @property
+    def delivery_stauts(self):
+        """Get the order delivery status"""
+        return "Not Delivered"
 
 
 class OrderItem(models.Model):
@@ -108,8 +121,9 @@ class OrderItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # Relationship
-    product = models.ForeignKey(Products, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="items")
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
+    applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, related_name="items_applied")
 
     def clean(self) -> None:
         moq = self.product.min_order_quantity

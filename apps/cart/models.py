@@ -3,7 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
-from apps.products.models import Products
+from apps.products.models import Product
 
 
 class Cart(models.Model):
@@ -35,7 +35,7 @@ class CartItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # Relationship
-    product = models.ForeignKey(Products, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
 
     def clean(self) -> None:

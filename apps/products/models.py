@@ -39,7 +39,7 @@ class Tag(models.Model):
         return f"[Tag] {self.name}"
 
 
-class Products(models.Model):
+class Product(models.Model):
     """The product model"""
     class ProductType(models.TextChoices):
         DIGITAL = "digital", "Digital product"
@@ -64,7 +64,7 @@ class Products(models.Model):
     purchase_count = models.PositiveIntegerField(
         default=0,
         help_text="keep a count of how many times this product has been successfully purchased"
-        )
+    )
     min_order_quantity = models.PositiveIntegerField(
         default=1,
         help_text="The min quantity a customer can buy in a single purchse. Defaults to 1"
@@ -118,7 +118,7 @@ class ProductImage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Relationship
-    products = models.ForeignKey(Products, on_delete=models.CASCADE, related_name="images")
+    products = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
 
     class Meta:
         verbose_name = "Image"
