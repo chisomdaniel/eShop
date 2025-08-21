@@ -56,9 +56,10 @@ class Product(models.Model):
     )
     name = models.CharField(max_length=500)
     description = models.TextField()
-    price = models.DecimalField(max_digits=50, decimal_places=2, validators=[MinValueValidator(0.00)])
+    price = models.DecimalField(max_digits=50, decimal_places=2, validators=[MinValueValidator(0)])
     stock_quantity = models.PositiveIntegerField()
     low_stock_threshold = models.PositiveIntegerField(
+        default=10,
         help_text="What quantity will the stock get to before it is considered too low and an alart can be raised"
     )
     purchase_count = models.PositiveIntegerField(
@@ -83,7 +84,7 @@ class Product(models.Model):
     )
     allow_backorder = models.BooleanField(
         default=False,
-        help_text="Allow customers to keep placing order on a product after the available stock has finished"
+        help_text="Allow customers to keep placing order on a product after the available stock has finished. For digital product, make this true if you want customer to purchase/download the digital product regardless of stock quantity."
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -109,20 +110,22 @@ class ProductImage(models.Model):
     id = models.UUIDField(
         default=uuid.uuid4, unique=True, primary_key=True, editable=False
     )
-    image_url = models.URLField()
+    image_url = models.URLField(unique=True)
     alt_text = models.TextField(blank=True)
     position = models.PositiveIntegerField(
-        default=2,
+        unique=True,
+        default=1,
         help_text="Identify the order which the product images will be displayed using numbers to repr first, second, etc. The first will be the cover image."
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Relationship
-    products = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
 
     class Meta:
         verbose_name = "Image"
         verbose_name_plural = "Images"
+        ordering = ["-position"]
     
     def __str__(self):
-        return f"[Image] for Product: {self.products.name}"
+        return f"[Image] for Product: {self.product.name}"

@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     # local
     'apps.accounts',
     'apps.cart',
-    'apps.coupons',
     'apps.orders',
     'apps.payments',
     'apps.products',
