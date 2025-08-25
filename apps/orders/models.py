@@ -3,6 +3,7 @@ import uuid
 from django.db import models, IntegrityError, transaction
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 
 from apps.products.models import Product
 from apps.discounts.models import Discounts
@@ -46,12 +47,14 @@ class Order(models.Model):
     # Relationship
     customer = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
     applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, related_name="orders_applied")
+    """for general order discount"""
+    # TODO: validate that the discount can be added order wide
 
     class Meta:
         verbose_name = "Order"
         verbose_name_plural = "Orders"
         ordering = ["-created_at"]
-    
+
     def __str__(self):
         return f"[Order] {self.user.first_name}'s Order"
     
@@ -103,10 +106,11 @@ class Order(models.Model):
     @property
     def payment_status(self):
         """Easily check the payment status from the model"""
+        # put logic for incomplete payment too
         return "UNPAID"
     
     @property
-    def delivery_stauts(self):
+    def delivery_status(self):
         """Get the order delivery status"""
         return "Not Delivered"
 
@@ -116,7 +120,9 @@ class OrderItem(models.Model):
     id = models.UUIDField(
         unique=True, default=uuid.uuid4, primary_key=True, editable=False
     )
-    quantity = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -124,15 +130,36 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="items")
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, related_name="items_applied")
+    """for product specific discount"""
+    # TODO: validate that the discount can be added on the product and is valid for the specific product
 
     def clean(self) -> None:
         moq = self.product.min_order_quantity
+        if not self.quantity:
+            self.quantity = moq
         if self.quantity < moq:
             raise ValidationError(
                 {
                     "quantity": f"Min order quantity (MOQ) for this product is {moq}"
                 }
             )
+        product = self.product
+        if product.status == Product.ProductStatus.archived:
+            raise ValidationError({
+                "product": "Product unavailable (Archived)"
+            })
+        if product.status == Product.ProductStatus.draft:
+            raise ValidationError({
+                "product": "Can't order add a product in draft"
+            })
+        if product.stock_quantity == 0 and not product.allow_backorder:
+            raise ValidationError({
+                "product": "This product is out of stock"
+            })
+        if self.quantity < product.stock_quantity:
+            raise ValidationError({
+                "quantity": "Not enough stock to fufil order"
+            })
     
     class Meta:
         verbose_name = "Order Item"
@@ -163,3 +190,10 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"[OrderItem] {self.quantity} x {self.product.name}"
+
+
+# TODO: add delivery option
+# TODO: add store locations for pickup
+# TODO: pay on delivery option, delivery fee can still be there but reduced
+# TODO: An order can only be marked as paid not only when there is a successful payment linked with it, but if the payment is the complete amount
+# TODO: when initializing a payment, it must come from the current updated price of the order

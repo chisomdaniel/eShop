@@ -48,7 +48,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
     def get_fields(self):
         fields = super().get_fields()
 
-        request = self.context.get("request")
+        request = self.context.get("request", None)
         if request and request.method in ["PUT", "PATCH"]:
             # make these fields writeable on update
             for field_name in ["alt_text", "position"]:
@@ -118,6 +118,32 @@ class ProductSerializer(serializers.ModelSerializer):
                 ProductImage.objects.create(product=product, **image_dict)
         return product
 
-    
-
 # Test what happens when you put a negative stock number
+
+
+class MinimalProductSerializer(serializers.ModelSerializer):
+    """Minimal product serializer for cartItem and orderItem view"""
+    image = serializers.SerializerMethodField()
+    in_stock = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "price",
+            "image",
+            "in_stock",
+            "min_order_quantity",
+            "status"
+        ]
+        read_only_fields = fields.copy()
+
+    def get_image(self, obj: Product):
+        """return the first image for cart/order item display"""
+        image: ProductImage = obj.images.first()
+        return image.image_url if image else None
+    
+    def get_in_stock(self, obj: Product):
+        return True if obj.stock_quantity > 0 else False
+

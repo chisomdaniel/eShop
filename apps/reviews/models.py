@@ -16,6 +16,7 @@ class Review(models.Model):
     )
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     # Relationship
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")

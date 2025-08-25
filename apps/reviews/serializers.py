@@ -21,11 +21,12 @@ class ReviewSerializer(serializers.ModelSerializer):
             "rating",
             "comment",
             "created_at",
-            "review_by",
+            "updated_at",
+            # "review_by",
             "user",
             "product",
         ]
-        read_only_fields = ["created_at"]
+        read_only_fields = ["created_at", "updated_at", "user"]
         validators = [
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
@@ -33,13 +34,7 @@ class ReviewSerializer(serializers.ModelSerializer):
                 message="You have already reviewed this product"
             )
         ]
-    
-    # def validate_rating(self, value):
-    #     """Validate the rating data"""
-    #     if value < 1 and value > 5:
-    #         raise serializers.ValidationError("Rating must be within 1 to 5")
-    #     return value
-    
+
     def validate(self, validated_data):
         """ensure only one review per user per product"""
         request = self.context["request"]
@@ -56,4 +51,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                 })
         return validated_data
 
+
+# test what happens if an invalid product ID is used to create a review
 

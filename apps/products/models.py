@@ -70,6 +70,8 @@ class Product(models.Model):
         default=1,
         help_text="The min quantity a customer can buy in a single purchse. Defaults to 1"
     )
+    """the MOQ should be the defualt count on the frontend when selecting an item
+    to add to cart or order"""
     status = models.CharField(
         max_length=10,
         choices=ProductStatus.choices,
