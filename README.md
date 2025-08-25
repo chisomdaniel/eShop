@@ -1,6 +1,6 @@
 # eShop
 
-eShop is a mini E-commerce app that can be embedded or integrated into other platforms, enabling them to sell products or services online with minimal setup. The app will be **self-contained**, providing product management, shopping cart, checkout, and payment featues **out of the box**.
+eShop is a mini E-commerce app that can be embedded or integrated into other platforms, enabling them to sell products or services online with minimal setup. The app will be **self-contained**, providing product management, shopping cart, checkout, and payment features **out of the box**.
 
 ### Requirement
 This project is expected to be:
