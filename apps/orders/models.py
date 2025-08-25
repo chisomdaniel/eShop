@@ -46,7 +46,7 @@ class Order(models.Model):
 
     # Relationship
     customer = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
-    applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, related_name="orders_applied")
+    applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders_applied")
     """for general order discount"""
     # TODO: validate that the discount can be added order wide
 
@@ -56,7 +56,7 @@ class Order(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"[Order] {self.user.first_name}'s Order"
+        return f"[Order] {self.customer.first_name}'s Order"
     
     def save(self, *args, **kwargs) -> None:
         if not self.order_number:
@@ -129,7 +129,7 @@ class OrderItem(models.Model):
     # Relationship
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="items")
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, related_name="items_applied")
+    applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, blank=True, related_name="items_applied")
     """for product specific discount"""
     # TODO: validate that the discount can be added on the product and is valid for the specific product
 
@@ -156,7 +156,7 @@ class OrderItem(models.Model):
             raise ValidationError({
                 "product": "This product is out of stock"
             })
-        if self.quantity < product.stock_quantity:
+        if self.quantity > product.stock_quantity:
             raise ValidationError({
                 "quantity": "Not enough stock to fufil order"
             })

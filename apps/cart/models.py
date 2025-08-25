@@ -84,7 +84,7 @@ class CartItem(models.Model):
             raise ValidationError({
                 "product": "This product is out of stock"
             })
-        if self.quantity < product.stock_quantity:
+        if self.quantity > product.stock_quantity:
             raise ValidationError({
                 "quantity": "Not enough stock to fufil order"
             })

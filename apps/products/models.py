@@ -93,7 +93,7 @@ class Product(models.Model):
 
     # Relationship
     categories = models.ManyToManyField(Category, related_name="products")
-    tags = models.ManyToManyField(Tag, related_name="products")
+    tags = models.ManyToManyField(Tag, related_name="products", blank=True)
 
     class Meta:
         verbose_name = "Product"

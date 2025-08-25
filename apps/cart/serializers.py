@@ -70,7 +70,7 @@ class CartItemSerializer(serializers.ModelSerializer):
             validated_data["cart"], _ = Cart.objects.get_or_create(user=user)
             if not quantity:
                 validated_data["quantity"] = product.min_order_quantity
-        if product and quantity and quantity and product and quantity < product.stock_quantity:
+        if product and quantity and quantity and product and quantity > product.stock_quantity:
             raise serializers.ValidationError({
                 "quantity": "Not enough stock to fufil order"
             })
