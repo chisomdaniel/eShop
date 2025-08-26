@@ -68,6 +68,7 @@ class Product(models.Model):
     )
     min_order_quantity = models.PositiveIntegerField(
         default=1,
+        validators=[MinValueValidator(0)],
         help_text="The min quantity a customer can buy in a single purchse. Defaults to 1"
     )
     """the MOQ should be the defualt count on the frontend when selecting an item

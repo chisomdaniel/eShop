@@ -7,7 +7,7 @@ from django.core.validators import MinValueValidator
 
 from apps.products.models import Product
 from apps.discounts.models import Discounts
-from utils.generate_unique_id import generate_unique_id
+from common.utils.generate_unique_id import generate_unique_id
 
 
 class Order(models.Model):
@@ -62,14 +62,19 @@ class Order(models.Model):
         if not self.order_number:
             self.order_number = generate_unique_id()
 
-        max_retries = 5
-        for _ in range(max_retries):
-            try:
-                with transaction.atomic():
-                    return super().save(*args, **kwargs)
-            except IntegrityError:
-                self.order_number = generate_unique_id()
-        raise RuntimeError(f"Failed to generate unique order_number after {max_retries} retries")
+        try:
+            max_retries = 5
+            for _ in range(max_retries):
+                try:
+                    with transaction.atomic():
+                        return super().save(*args, **kwargs)
+                except IntegrityError as e:
+                    if str(e) == "UNIQUE constraint failed: orders_order.order_number":
+                        self.order_number = generate_unique_id()
+        except IntegrityError as e:
+            if str(e) == "UNIQUE constraint failed: orders_order.order_number":
+                raise e # TODO: use a custom exception here to raise for unique id
+            raise e
 
     @property
     def subtotal(self):

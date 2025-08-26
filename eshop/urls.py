@@ -8,6 +8,7 @@ urlpatterns = [
 
     # v1
     path('api/v1/accounts/', include('apps.accounts.urls')),
+    path('api/v1/products/', include('apps.products.urls')),
 
     # swagga ui
     path('api/schema', SpectacularAPIView.as_view(), name='schema'),
@@ -16,7 +17,7 @@ urlpatterns = [
 
     # password reset
     path(
-        "password/reset/<uidb64>/<token>/",
+        "password/reset/<uuid:uidb64>/<str:token>/",
         PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),

@@ -2,8 +2,10 @@ from rest_framework import serializers
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer
 from django.conf import settings
+from django.db import IntegrityError
 from rest_framework.exceptions import MethodNotAllowed
 
+from common.utils.custom_exceptions import UserAlreadyExist
 from .models import User, Profile
 
 
@@ -51,6 +53,15 @@ class UserRegisterSerializer(RegisterSerializer):
             'password1': self.validated_data.get('password', None)
         })
         return data
+    
+    def save(self, request):
+        """raise `UserAlreadyExist exception if user already exist"""
+        try:
+            return super().save(request)
+        except IntegrityError as e:
+            if str(e) == "UNIQUE constraint failed: accounts_user.email":
+                raise UserAlreadyExist
+            raise e
 
     def custom_signup(self, request, user: User):
         """
@@ -91,7 +102,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "image",
             "profile",
             "is_active",
-            "date_joined",
+            "created_at",
             "updated_at",
         ]
         read_only_fields = ["email", "is_active", "date_joined", "updated_at"]

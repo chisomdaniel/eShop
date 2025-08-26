@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.products',
     'apps.reviews',
     'apps.discounts',
+    'common',
 ]
 
 MIDDLEWARE = [
@@ -134,7 +135,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# APP SETTINGS
+#                               APP SETTINGS
+# =========================================================================
+
 AUTH_USER_MODEL = 'accounts.User'
 STORE_CURRENCY = 'NGN'
 """The currency the store's products/service will be listed as internally.
@@ -152,11 +155,12 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'common.utils.custom_exception_handler.custom_exception_handler',
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Users app',
-    'DESCRIPTION': 'Manage users account in any project',
+    'TITLE': 'eShop',
+    'DESCRIPTION': 'A mini E-commerce app that can be embedded or integrated into other platforms, enabling them to sell products or services online with minimal setup',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
