@@ -51,6 +51,9 @@ class ProductImageSerializer(serializers.ModelSerializer):
         # read_only_fields = ["image_url"]
 
 
+# TODO: display rating aggregate on product on the product view
+# TODO: put a boolean `in_cart` and `quantity in cart` to show if a product is in a user's cart and the quantity
+
 class ProductSerializer(serializers.ModelSerializer):
     """The product serializer"""
     categories = serializers.SlugRelatedField(

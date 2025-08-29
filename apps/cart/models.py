@@ -30,7 +30,7 @@ class Cart(models.Model):
         """The total price of all items before discount is removed
         or any other additional charges is added."""
         subtotal = sum([i.subtotal for i in self.items.all()])
-        return subtotal
+        return float(subtotal)
     
     @property
     def discounts(self):
@@ -52,6 +52,7 @@ class CartItem(models.Model):
         unique=True, primary_key=True, editable=False, default=uuid.uuid4
     )
     quantity = models.PositiveIntegerField(
+        default=1,
         validators=[MinValueValidator(1)]
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -112,4 +113,4 @@ class CartItem(models.Model):
     @property
     def discounted_amount(self):
         """the amount after any product specific discount has been removed"""
-        pass
+        return 0.00

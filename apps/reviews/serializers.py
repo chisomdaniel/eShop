@@ -7,12 +7,10 @@ from .models import Review
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(
-        slug_field="full_name", read_only=True
+    review_by = serializers.SerializerMethodField()
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
     )
-    # user = serializers.HiddenField(
-    #     default=serializers.CurrentUserDefault()
-    # )
 
     class Meta:
         model = Review
@@ -22,11 +20,11 @@ class ReviewSerializer(serializers.ModelSerializer):
             "comment",
             "created_at",
             "updated_at",
-            # "review_by",
+            "review_by",
             "user",
             "product",
         ]
-        read_only_fields = ["created_at", "updated_at", "user"]
+        read_only_fields = ["review_by", "created_at", "updated_at", "user"]
         validators = [
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
@@ -38,19 +36,16 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, validated_data):
         """ensure only one review per user per product"""
         request = self.context["request"]
-        validated_data["user"] = request.user
-        # if request.method == "POST":
-        #     user = request.user
-        #     product_id = validated_data.pop("product")
-        #     if Review.objects.filter(product=product_id, user=user).exists():
-        #         raise serializers.ValidationError("You have already reviewed this product")
         if request.method in ["PUT", "PATCH"]:
             if "product" in validated_data:
                 raise serializers.ValidationError({
                     "product": "You can not update the product"
                 })
         return validated_data
+    
+    def get_review_by(self, obj):
+        return obj.user.full_name
 
 
-# test what happens if an invalid product ID is used to create a review
+# TODO test what happens if an invalid product ID is used to create a review
 

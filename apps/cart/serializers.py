@@ -6,10 +6,25 @@ from apps.products.models import Product
 
 from .models import Cart, CartItem
 
+# TODO: test the PUT cart item endpoint
+
+
+def check_product_exists(validated_data):
+    """checks if product already exist in the user's
+    cart. Returns the item and quantity"""
+    product = validated_data.get("product")
+    cart = validated_data.get("cart")
+    item = cart.items.filter(product_id=product).first()
+    if item:
+        """update the data so the create method easily verify
+        without accessing the db again"""
+        validated_data.update({"exists": True, "item": item})
+        return item, item.quantity
+    return None, None
+
 
 class CartItemSerializer(serializers.ModelSerializer):
     """cart Item serializier"""
-    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
 
     class Meta:
         model = CartItem
@@ -25,14 +40,7 @@ class CartItemSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "subtotal", "discounted_amount", "created_at", "updated_at"
         ]
-        validators = [
-            UniqueTogetherValidator(
-                queryset=CartItem.objects.all(),
-                fields=["cart", "product"],
-                message="Product already added to cart."
-            )
-        ]
-    
+
     def get_fields(self):
         """make the product field read only on update"""
         fields = super().get_fields()
@@ -44,41 +52,53 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     def validate_product(self, product):
         if product.status == Product.ProductStatus.archived:
-            raise serializers.ValidationError({
-                "product": "Product unavailable (Archived)"
-            })
+            raise serializers.ValidationError("Product unavailable (Archived)")
         if product.status == Product.ProductStatus.draft:
-            raise serializers.ValidationError({
-                "product": "Can't add a product in draft to cart"
-            })
+            raise serializers.ValidationError("Can not order a product in draft")
         if product.stock_quantity == 0 and not product.allow_backorder:
-            raise serializers.ValidationError({
-                "product": "This product is out of stock"
-            })
+            raise serializers.ValidationError("This product is out of stock")
+        return product
 
     def validate(self, validated_data):
         request = self.context.get("request")
         user = request.user
-        product: Product = validated_data.get("product", None)
+        validated_data["cart"], _ = Cart.objects.get_or_create(user=user)
+        product: Product = validated_data.get("product")
         quantity = validated_data.get("quantity", None)
+        """if quantity is not provided it defaults to the MOQ.
+        If item exist, the previous quantity is increased by 1 or
+        updated to the new quantity provided in the request if available
+        """
+        item, item_quantity = check_product_exists(validated_data)
+        if item_quantity and not quantity:
+            quantity = item_quantity + 1
+
         if request.method == "POST":
             moq = product.min_order_quantity
+            if not quantity and not item:
+                quantity = moq
             if product and (quantity < moq):
                 raise serializers.ValidationError({
                     "quantity": f"Min order quantity (MOQ) for this product is {moq}"
                 })
-            validated_data["cart"], _ = Cart.objects.get_or_create(user=user)
-            if not quantity:
-                validated_data["quantity"] = product.min_order_quantity
         if product and quantity and quantity and product and quantity > product.stock_quantity:
             raise serializers.ValidationError({
                 "quantity": "Not enough stock to fufil order"
             })
+
+        validated_data["quantity"] = quantity
         return validated_data
+
+    def create(self, validated_data):
+        """check if the product already exist in the user's cart and just update it"""
+        if validated_data.get("exists"):
+            """this is already added in the validate method if item exist"""
+            item = validated_data.pop("item")
+            return self.update(item, validated_data)
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """only the quantity is available for update"""
-        quantity = validated_data.get("quantity", 0)
         self.validate_product(instance.product)
         return super().update(instance, validated_data)
 
@@ -97,7 +117,6 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = [
-            "id",
             "items",
             "subtotal",
             "discounts",
@@ -106,3 +125,5 @@ class CartSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["subtotal", "discounts", "total_amount", "created_at", "updated_at"]
+
+# TODO: return number of items in the cart

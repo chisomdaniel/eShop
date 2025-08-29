@@ -1,5 +1,5 @@
-from typing import Iterable
 import uuid
+from decimal import Decimal
 from django.db import models, IntegrityError, transaction
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -45,7 +45,7 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # Relationship
-    customer = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
     applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders_applied")
     """for general order discount"""
     # TODO: validate that the discount can be added order wide
@@ -81,7 +81,7 @@ class Order(models.Model):
         """The total price of all items before discount is removed
         or any other additional charges is added."""
         subtotal = sum([i.subtotal for i in self.items.all()])
-        return subtotal
+        return float(subtotal)
 
     @property
     def discounts(self):

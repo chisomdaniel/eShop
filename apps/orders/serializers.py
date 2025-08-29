@@ -13,7 +13,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     """order item serializers"""
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
     applied_discount = serializers.SlugRelatedField(
-        slug_field="code", queryset=Discounts.objects.all(), allow_null=True
+        slug_field="code", queryset=Discounts.objects.all(), required=False
     )
     order = serializers.SlugRelatedField(
         slug_field="order_number", read_only=True
@@ -23,9 +23,9 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = [
             "id",
-            "quantity", #
-            "product", #
-            "applied_discount", #
+            "quantity",
+            "product",
+            "applied_discount",
             "order",
             "subtotal",
             "discounted_amount",
@@ -35,27 +35,15 @@ class OrderItemSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "order", "subtotal", "discounted_amount", "created_at", "updated_at"
         ]
-        validators = [
-            UniqueTogetherValidator(
-                queryset=OrderItem.objects.all(),
-                fields=["order", "product"],
-                message="Product already added to order."
-            )
-        ]
     
     def validate_product(self, product):
         if product.status == Product.ProductStatus.archived:
-            raise serializers.ValidationError({
-                "product": "Product unavailable (Archived)"
-            })
+            raise serializers.ValidationError("Product unavailable (Archived)")
         if product.status == Product.ProductStatus.draft:
-            raise serializers.ValidationError({
-                "product": "Can not order a product in draft"
-            })
+            raise serializers.ValidationError("Can not order a product in draft")
         if product.stock_quantity == 0 and not product.allow_backorder:
-            raise serializers.ValidationError({
-                "product": "This product is out of stock"
-            })
+            raise serializers.ValidationError("This product is out of stock")
+        return product
     
     def validate(self, validated_data):
         request = self.context.get("request", None)
@@ -85,19 +73,19 @@ class OrderSerializer(serializers.ModelSerializer):
     """Order serializer"""
     items = OrderItemSerializer(many=True)
     applied_discount = serializers.SlugRelatedField(
-        slug_field="code", queryset=Discounts.objects.all(), allow_null=True
+        slug_field="code", queryset=Discounts.objects.all(), required=False
     )
 
     class Meta:
         model = Order
         fields = [
             "id",
-            "items", #
-            "notes", #
-            "applied_discount", #
+            "items",
+            "notes",
+            "applied_discount",
             "order_number",
             "status",
-            "customer", #
+            "customer",
             "subtotal",
             "discounts",
             "delivery_fee",
@@ -116,7 +104,7 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "order_number",
-            "status", # status can only be updated by store owner
+            "status", # status can only be updated by store owner or payment callback
             "customer",
             "subtotal",
             "discounts",
@@ -135,16 +123,21 @@ class OrderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("The request context must be passed to the Order serializer")
         if request.method in ["PUT", "PATCH"]:
             raise MethodNotAllowed(request.method, detail="Cannot update an order once created. Cancel and create another.")
+        validated_data["customer"] = request.user
+        return validated_data
 
     def create(self, validated_data):
         """create an order. an order must have at least one order item"""
-        request = self.context.get("request", None)
         order_items = validated_data.pop("items")
-        validated_data["customer"] = request.user
 
-        order = super().create(validated_data)
+        order = Order.objects.create(**validated_data)
+        added_products = {}
         for item in order_items:
+            # ensure product is unique in Order
+            if added_products.get(item["product"].id, None):
+                raise serializers.ValidationError("You cannot add the same product twice. Increase the quantity instead")
             OrderItem.objects.create(order=order, **item)
+            added_products[item["product"].id] = True
 
         return order
 
