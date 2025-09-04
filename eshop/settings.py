@@ -148,6 +148,10 @@ SITE_ID = 1
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 warnings.filterwarnings("ignore", module="dj_rest_auth") # To ignore all warnings from a specific module
 
+# PAYSTACK
+PAYSTACK_KEY = os.getenv("PAYSTACK_TEST_SECRET") if DEBUG else os.getenv("PAYSTACK_SECRET_KEY")
+IP_WHITELIST = ["52.31.139.75", "52.49.173.169", "52.214.14.220"]
+
 # DJANGO REST FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

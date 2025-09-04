@@ -5,6 +5,7 @@ from rest_framework.exceptions import MethodNotAllowed
 from apps.products.serializers import MinimalProductSerializer
 from apps.discounts.models import Discounts
 from apps.products.models import Product
+from common.services.payment_service import initialize_payment
 
 from .models import Order, OrderItem
 
@@ -133,7 +134,7 @@ class OrderSerializer(serializers.ModelSerializer):
         order = Order.objects.create(**validated_data)
         added_products = {}
         for item in order_items:
-            # ensure product is unique in Order
+            """ensure product is unique in Order"""
             if added_products.get(item["product"].id, None):
                 raise serializers.ValidationError("You cannot add the same product twice. Increase the quantity instead")
             OrderItem.objects.create(order=order, **item)

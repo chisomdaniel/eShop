@@ -13,11 +13,10 @@ from common.utils.generate_unique_id import generate_unique_id
 class Order(models.Model):
     """Manage users order"""
     class OrderStatus(models.TextChoices):
-        PENDING = "pending", "Pending"
-        PAID = "paid", "Paid"
+        PROCESSING = "processing", "Processing"
         FULFILLED = "fulfilled", "Fulfilled"
         CANCELLED = "cancelled", "Cancelled"
-        REFUNDED = "refunded", "Refunded"
+        RETURNED = "returned", "Returned"
 
     id = models.UUIDField(
         unique=True, default=uuid.uuid4, primary_key=True, editable=False
@@ -26,7 +25,7 @@ class Order(models.Model):
     status = models.CharField(
         max_length=20,
         choices=OrderStatus.choices,
-        default=OrderStatus.PENDING,
+        default=OrderStatus.PROCESSING,
         help_text="The status of the order"
     )
     delivery_address_line1 = models.TextField()
@@ -111,8 +110,8 @@ class Order(models.Model):
     @property
     def payment_status(self):
         """Easily check the payment status from the model"""
-        # put logic for incomplete payment too
-        return "UNPAID"
+        payment = self.payments.first()
+        return payment.payment_status
     
     @property
     def delivery_status(self):
@@ -201,4 +200,3 @@ class OrderItem(models.Model):
 # TODO: add store locations for pickup
 # TODO: pay on delivery option, delivery fee can still be there but reduced
 # TODO: An order can only be marked as paid not only when there is a successful payment linked with it, but if the payment is the complete amount
-# TODO: when initializing a payment, it must come from the current updated price of the order

@@ -11,44 +11,48 @@ This project is expected to be:
 
 ## Core Features
 1. Product Management:
-   - [ ] Host can add, edit, delete products
-   - [ ] Product categories and tags
-   - [ ] Product images and description
-   - [ ] Stock quantity management
-   - [ ] Set low stock reminder
-   - [ ] Pricing
-   - [ ] Digital and physical product support
+   - [x] Host can add, edit, delete products
+   - [x] Product categories and tags
+   - [x] Product images and description
+   - [x] Stock quantity management
+   - [x] Set low stock reminder
+   - [x] Pricing
+   - [x] Digital and physical product support
    - [ ] Enable sub-category
    - [ ] Enable product variant
-   - [ ] Allow backorder on empty stock
+   - [x] Allow backorder on empty stock
 
 2. Shopping cart:
-   - [ ] Add/remove products to cart
-   - [ ] Update cart quantities
+   - [x] Add/remove products to cart
+   - [x] Update cart quantities
    - [ ] Discount and Coupon codes
-   - [ ] Shipping and delivery options
+   - [x] Support delivery
+   - [ ] Shipping and delivery options (e.g. Pick up)
 
 3. Payments
-   - [ ] Payment gateway integrations (Stripe, PayPal, Flutterwave, Paystack)
+   - [x] Payment gateway integrations (Stripe, PayPal, Flutterwave, Paystack)
    - [ ] Cash-on-delivery option
 
 4. Order Management
-   - [ ] Order creation & tracking
-   - [ ] Order status updates (pending, shipped, delivered, cancelled)
+   - [x] Order creation & status tracking
+   - [x] Order status updates (pending, shipped, delivered, cancelled)
    - [ ] Invoice generation
    - [ ] Email/SMS notifications
 
 5. User Accounts
-   - [ ] Customer registration & login (email or social login)
+   - [x] Customer registration & login (email or social login)
    - [ ] View past orders
    - [ ] Manage shipping addresses
 
 6. Product Review
-   - [ ] Customer review on product
+   - [x] Customer review on product
+
+7. Admin API
+   - [ ] Admin API to manage store and products
 
 
 ### Other features include:
-- [ ] Setting up proper and robost logging across all app.
+- [x] Setting up proper and robost logging across all app.
 - [ ] Background job processing to speadup app performance when faced with time consuming task
 - [ ] Caching
 - [ ] Pagination

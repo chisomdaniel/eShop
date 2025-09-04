@@ -27,7 +27,8 @@ def error_response(message: str, status_code: int):
     """Helper function to format error responses."""
     return Response({
         "status": status_code,
-        "message": message
+        "message": message,
+        "data": None
     }, status=status_code)
 
 def success_response(data: list | dict, message: str, status_code: int=status.HTTP_200_OK):

@@ -17,3 +17,10 @@ class UserAlreadyExist(APIException):
     status = 201
     default_detail = "Verification e-mail sent."
     default_code = "Created"
+
+
+class ServiceUnavailable(APIException):
+    """For third party API service"""
+    status = 503
+    default_detail = "Service unavailable, please contact support if error persists."
+    default_code = "Service Unavailable"

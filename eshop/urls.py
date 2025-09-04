@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/v1/reviews/', include('apps.reviews.urls'), name='reviews'),
     path('api/v1/cart/', include('apps.cart.urls'), name='cart'),
     path('api/v1/orders/', include('apps.orders.urls'), name='orders'),
+    path('api/v1/payments/', include('apps.payments.urls'), name='payments'),
 
     # swagga ui
     path('api/schema', SpectacularAPIView.as_view(), name='schema'),
