@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework.exceptions import MethodNotAllowed
+from django.db import transaction
 
 from apps.products.serializers import MinimalProductSerializer
 from apps.discounts.models import Discounts
@@ -81,6 +82,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             "id",
+            "total_quantity",
             "items",
             "notes",
             "applied_discount",
@@ -105,7 +107,7 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "order_number",
-            "status", # status can only be updated by store owner or payment callback
+            "status",
             "customer",
             "subtotal",
             "discounts",
@@ -119,6 +121,10 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, validated_data):
+        if not validated_data.get("items"):
+            raise serializers.ValidationError({
+                "items": "Order must contain at least one item"
+            })
         request = self.context.get("request", None)
         if not request:
             raise serializers.ValidationError("The request context must be passed to the Order serializer")
@@ -127,28 +133,29 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data["customer"] = request.user
         return validated_data
 
+    @transaction.atomic()
     def create(self, validated_data):
-        """create an order. an order must have at least one order item"""
+        """create an order"""
         order_items = validated_data.pop("items")
 
         order = Order.objects.create(**validated_data)
         added_products = {}
+        total_quantity = 0
         for item in order_items:
             """ensure product is unique in Order"""
             if added_products.get(item["product"].id, None):
                 raise serializers.ValidationError("You cannot add the same product twice. Increase the quantity instead")
             OrderItem.objects.create(order=order, **item)
+            total_quantity += item["quantity"]
             added_products[item["product"].id] = True
 
+        order.total_quantity = total_quantity
+        order.save(update_fields=["total_quantity"])
         return order
 
 
-# TODO: factor in the "store currency" when placing order
 # TODO: reduce stock by order quantity when creating orders
 # TODO: increase purchase count after a successful order payment
-# TODO: test what happens when no item is provided or when an empty dict of items is provided
-# TODO: return a count of items in the user's cart and order
 
 # TODO: test discount code validity in items and order
-# TODO: test checkout flow and see update. Done
 # TODO: use their primary delivery address by default. they can update it

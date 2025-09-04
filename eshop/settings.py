@@ -146,6 +146,7 @@ and must be supported by the payment gateway. E.g. 'USD', 'EUR', 'GDP', 'NGN'"""
 
 SITE_ID = 1
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+APPEND_SLASH = False
 warnings.filterwarnings("ignore", module="dj_rest_auth") # To ignore all warnings from a specific module
 
 # PAYSTACK

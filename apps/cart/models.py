@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
+from django.db.models import Sum
 
 from apps.products.models import Product
 
@@ -25,6 +26,12 @@ class Cart(models.Model):
     def __str__(self):
         return f"[Cart] {self.user.first_name}'s cart"
     
+    @property
+    def no_of_items(self):
+        """The total number of items in the user's cart"""
+        count = self.items.aggregate(total=Sum("quantity"))["total"] or 0
+        return count
+
     @property
     def subtotal(self):
         """The total price of all items before discount is removed

@@ -12,7 +12,7 @@ class CartItemViewSet(ModelViewSet):
     serializer_class = CartItemSerializer
     queryset = CartItem.objects.all()
     permission_classes = [IsCartOwner]
-    http_method_names = ["post", "patch", "delete"]
+    http_method_names = ["post", "put", "patch", "delete"]
 
     def get_queryset(self):
         """return only the user's cart item"""
@@ -23,8 +23,8 @@ class CartItemViewSet(ModelViewSet):
         response = super().create(request, *args, **kwargs)
         return customize_response(response, "Item added successfully.")
 
-    def partial_update(self, request, *args, **kwargs):
-        response = super().partial_update(request, *args, **kwargs)
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
         return customize_response(response, "Item updated successfully.")
     
     def destroy(self, request, *args, **kwargs):

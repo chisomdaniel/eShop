@@ -26,7 +26,7 @@ cart_item = CartItemViewSet.as_view({
 
 # update and delete an item
 cart_item_detail = CartItemViewSet.as_view({
-    "patch": "partial_update", "delete": "destroy"
+    "put": "update", "delete": "destroy"
 })
 
 urlpatterns = [

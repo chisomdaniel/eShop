@@ -6,8 +6,6 @@ from apps.products.models import Product
 
 from .models import Cart, CartItem
 
-# TODO: test the PUT cart item endpoint
-
 
 def check_product_exists(validated_data):
     """checks if product already exist in the user's
@@ -63,7 +61,12 @@ class CartItemSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         user = request.user
         validated_data["cart"], _ = Cart.objects.get_or_create(user=user)
+
         product: Product = validated_data.get("product")
+        if not product and request.method in ["PUT", "PATCH"]:
+            validated_data["product"] = getattr(self.instance, "product", None)
+            product = validated_data["product"]
+
         quantity = validated_data.get("quantity", None)
         """if quantity is not provided it defaults to the MOQ.
         If item exist, the previous quantity is increased by 1 or
@@ -73,14 +76,13 @@ class CartItemSerializer(serializers.ModelSerializer):
         if item_quantity and not quantity:
             quantity = item_quantity + 1
 
-        if request.method == "POST":
-            moq = product.min_order_quantity
-            if not quantity and not item:
-                quantity = moq
-            if product and (quantity < moq):
-                raise serializers.ValidationError({
-                    "quantity": f"Min order quantity (MOQ) for this product is {moq}"
-                })
+        moq = product.min_order_quantity
+        if not quantity and not item:
+            quantity = moq
+        if product and (quantity < moq):
+            raise serializers.ValidationError({
+                "quantity": f"Min order quantity (MOQ) for this product is {moq}"
+            })
         if product and quantity and quantity and product and quantity > product.stock_quantity:
             raise serializers.ValidationError({
                 "quantity": "Not enough stock to fufil order"
@@ -117,6 +119,7 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = [
+            "no_of_items",
             "items",
             "subtotal",
             "discounts",
@@ -125,5 +128,3 @@ class CartSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["subtotal", "discounts", "total_amount", "created_at", "updated_at"]
-
-# TODO: return number of items in the cart

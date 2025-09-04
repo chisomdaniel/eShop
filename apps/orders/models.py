@@ -4,6 +4,7 @@ from django.db import models, IntegrityError, transaction
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
+from django.db.models import Sum
 
 from apps.products.models import Product
 from apps.discounts.models import Discounts
@@ -28,6 +29,7 @@ class Order(models.Model):
         default=OrderStatus.PROCESSING,
         help_text="The status of the order"
     )
+    total_quantity = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0)])
     delivery_address_line1 = models.TextField()
     delivery_address_line2 = models.TextField(blank=True)
     delivery_address_closest_busstop = models.TextField()
@@ -47,7 +49,7 @@ class Order(models.Model):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
     applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders_applied")
     """for general order discount"""
-    # TODO: validate that the discount can be added order wide
+    # TODO: validate that the discount can be added order wide and on specific item
 
     class Meta:
         verbose_name = "Order"
@@ -74,6 +76,12 @@ class Order(models.Model):
             if str(e) == "UNIQUE constraint failed: orders_order.order_number":
                 raise e # TODO: use a custom exception here to raise for unique id
             raise e
+    
+    @property
+    def no_of_items(self):
+        """The total number of items in the user's cart"""
+        count = self.items.aggregate(total=Sum("quantity"))["total"] or 0
+        return count
 
     @property
     def subtotal(self):
@@ -135,7 +143,6 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, blank=True, related_name="items_applied")
     """for product specific discount"""
-    # TODO: validate that the discount can be added on the product and is valid for the specific product
 
     def clean(self) -> None:
         moq = self.product.min_order_quantity
@@ -196,7 +203,6 @@ class OrderItem(models.Model):
         return f"[OrderItem] {self.quantity} x {self.product.name}"
 
 
-# TODO: add delivery option
+# TODO: add delivery option (door delivery, pickup)
 # TODO: add store locations for pickup
-# TODO: pay on delivery option, delivery fee can still be there but reduced
-# TODO: An order can only be marked as paid not only when there is a successful payment linked with it, but if the payment is the complete amount
+# TODO: payment option (pay on delivery option, delivery fee can still be there but reduced)

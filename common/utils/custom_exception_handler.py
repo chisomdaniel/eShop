@@ -1,6 +1,7 @@
 import logging
 from rest_framework.views import exception_handler
 from rest_framework import status
+from rest_framework.response import Response
 
 from .custom_exceptions import UserAlreadyExist
 from .responses import error_response, customize_response
@@ -28,6 +29,15 @@ def custom_exception_handler(exc, context):
             return customize_response(response)
 
     """internal server error"""
-    logger.error(f"Internal server error: {exc}", exc_info=exc)
-    return response
+    request = context.get("request")
+    error_message = (f"\n\t\t\tINTERNAL SERVER ERROR:\n"
+                    f"{"="*80}\n{exc}\n{"="*80}"
+                    f"In View\t\t: {context.get("view")}\n"
+                    f"Logged in user\t: {request.user} [{request.user.email}]\n"
+                    f"Accessing endpoint: {request.path} ({request.resolver_match.url_name})\n"
+                    f"Method\t\t: {request.method}\nPayload\t\t: {request.data}\n"
+                    f"{"="*80}")
 
+    logger.critical(error_message,exc_info=exc)
+
+    return response

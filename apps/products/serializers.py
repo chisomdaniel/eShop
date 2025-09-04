@@ -3,6 +3,7 @@ import uuid
 from PIL import Image
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from django.db.models import Avg
 
 from .models import Product, Category, Tag, ProductImage
 
@@ -34,7 +35,7 @@ class ProductImageUploadSerializer(serializers.ModelSerializer):
                 validated_data["image_url"] = file_location
                 return validated_data
         except Exception as e:
-            raise ValidationError("Error while uploding product image, please try again")
+            raise ValidationError("Error while uploding product image, please try again. Contact support if issue persists.")
             # TODO: LOG
     
     def to_representation(self, instance: dict[str, str]):
@@ -51,7 +52,6 @@ class ProductImageSerializer(serializers.ModelSerializer):
         # read_only_fields = ["image_url"]
 
 
-# TODO: display rating aggregate on product on the product view
 # TODO: put a boolean `in_cart` and `quantity in cart` to show if a product is in a user's cart and the quantity
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -63,6 +63,7 @@ class ProductSerializer(serializers.ModelSerializer):
         many=True, slug_field="name", queryset=Tag.objects.all(), allow_null=True
     )
     images = ProductImageSerializer(many=True, required=False)
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -70,6 +71,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
+            "rating",
             "price",
             "stock_quantity",
             "min_order_quantity",
@@ -107,6 +109,12 @@ class ProductSerializer(serializers.ModelSerializer):
             for image_dict in images:
                 ProductImage.objects.create(product=product, **image_dict)
         return product
+    
+    def get_rating(self, instance):
+        """get the aggregate rating on the product"""
+        average_rating = instance.reviews.aggregate(avg=Avg("rating"))["avg"] or 0
+        review_count = instance.reviews.count()
+        return f"{average_rating} ({review_count})"
 
 
 class MinimalProductSerializer(serializers.ModelSerializer):

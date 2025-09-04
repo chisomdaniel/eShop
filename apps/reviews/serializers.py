@@ -47,5 +47,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         return obj.user.full_name
 
 
-# TODO test what happens if an invalid product ID is used to create a review
+class ReviewQuerySerializer(serializers.Serializer):
+    product_id = serializers.UUIDField(required=True)
 

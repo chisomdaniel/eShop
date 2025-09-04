@@ -37,7 +37,10 @@ class OrderViewSet(ModelViewSet):
 
         if (order.total_amount <= 0):
             """for orders with 0 fees and 0 prices"""
-            return success_response("NoPaymentRequired: Order created successfully", status_code=status.HTTP_201_CREATED)
+            return success_response(
+                {"order_id": order.id},
+                "NoPaymentRequired: Order created successfully",
+                status_code=status.HTTP_201_CREATED)
 
         # create payment after creating order
         payment_data = {

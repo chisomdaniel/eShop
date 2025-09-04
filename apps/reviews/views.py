@@ -5,7 +5,7 @@ from common.utils.responses import customize_response
 from apps.accounts.permissions import IsOwnerOrReadonly
 
 from .models import Review
-from .serializers import ReviewSerializer
+from .serializers import ReviewSerializer, ReviewQuerySerializer
 
 
 class ReviewViewSet(ModelViewSet):
@@ -15,9 +15,11 @@ class ReviewViewSet(ModelViewSet):
     http_method_names = ["get", "post", "patch", "delete"]
 
     def get_queryset(self):
-        product_id = self.request.query_params.get("product_id", None)
-        if product_id:
-            # TODO: validate the product ID is a valid uuid
+        product = self.request.query_params.get("product")
+        if product:
+            serializer = ReviewQuerySerializer(data={"product_id": product})
+            serializer.is_valid(raise_exception=True)
+            product_id = serializer.validated_data.get("product_id")
             return self.queryset.filter(product_id=product_id)
         return super().get_queryset()
 
