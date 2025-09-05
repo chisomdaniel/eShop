@@ -10,7 +10,6 @@ from .models import Order, OrderItem
 from .serializers import OrderSerializer, OrderItemSerializer
 
 
-# TODO: filter order by status
 class OrderViewSet(ModelViewSet):
     serializer_class = OrderSerializer
     queryset = Order.objects.all()

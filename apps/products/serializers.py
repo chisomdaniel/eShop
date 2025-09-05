@@ -5,6 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.db.models import Avg
 
+from common.utils.custom_exceptions import ServiceUnavailable
 from .models import Product, Category, Tag, ProductImage
 
 
@@ -18,7 +19,6 @@ class ProductImageUploadSerializer(serializers.ModelSerializer):
         fields = ["image"]
     
     def create(self, validated_data):
-        # TODO: change implementation to upload to cloud storage here
         image = validated_data.pop("image", None)
         try:
             if image:
@@ -35,8 +35,7 @@ class ProductImageUploadSerializer(serializers.ModelSerializer):
                 validated_data["image_url"] = file_location
                 return validated_data
         except Exception as e:
-            raise ValidationError("Error while uploding product image, please try again. Contact support if issue persists.")
-            # TODO: LOG
+            raise ServiceUnavailable("Error while uploding product image, please try again. Contact support if issue persists.")
     
     def to_representation(self, instance: dict[str, str]):
         """Instance can be a dict as returned from the `create` method in create operation,

@@ -148,14 +148,13 @@ class OrderSerializer(serializers.ModelSerializer):
             OrderItem.objects.create(order=order, **item)
             total_quantity += item["quantity"]
             added_products[item["product"].id] = True
+            """reduce the stock quantity from the existing stock
+            and increase product purchase count"""
+            product: Product = item["product"]
+            product.stock_quantity -= item["quantity"]
+            product.purchase_count += item["quantity"]
+            product.save(update_fields=["stock_quantity", "purchase_count"])
 
         order.total_quantity = total_quantity
         order.save(update_fields=["total_quantity"])
         return order
-
-
-# TODO: reduce stock by order quantity when creating orders
-# TODO: increase purchase count after a successful order payment
-
-# TODO: test discount code validity in items and order
-# TODO: use their primary delivery address by default. they can update it

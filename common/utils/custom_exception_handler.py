@@ -3,7 +3,9 @@ from rest_framework.views import exception_handler
 from rest_framework import status
 from rest_framework.response import Response
 
-from .custom_exceptions import UserAlreadyExist
+from .custom_exceptions import (UserAlreadyExist,
+                                UniqueOrderNumberError,
+                                ServiceUnavailable)
 from .responses import error_response, customize_response
 from .email_handler import send_user_exist_email
 
@@ -16,9 +18,13 @@ def custom_exception_handler(exc, context):
 
     if isinstance(exc, UserAlreadyExist) and response is not None:
         send_user_exist_email(context.get("request"))
-        response.status_code = 201
+        response.status_code = status.HTTP_201_CREATED
         return customize_response(response)
-    
+    elif isinstance(exc, UniqueOrderNumberError) and response is not None:
+        response.data = {"detail": "Unable to place Order at this time, Please try again in 1 minute."}
+    elif isinstance(exc, ServiceUnavailable):
+        logger.error("Service Unavaliable: Error while trying to perform an operation that requires a service", exc_info=exc)
+
     if response is not None:
         """customize response"""
         if response.status_code == status.HTTP_401_UNAUTHORIZED:
@@ -38,6 +44,6 @@ def custom_exception_handler(exc, context):
                     f"Method\t\t: {request.method}\nPayload\t\t: {request.data}\n"
                     f"{"="*80}")
 
-    logger.critical(error_message,exc_info=exc)
+    logger.critical(error_message, exc_info=exc)
 
     return response

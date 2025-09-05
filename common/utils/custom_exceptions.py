@@ -1,4 +1,5 @@
 from rest_framework.exceptions import APIException
+from rest_framework import status
 
 
 class UserAlreadyExist(APIException):
@@ -14,13 +15,20 @@ class UserAlreadyExist(APIException):
     for a verification link or code. Then a mail informing the user
     that their account already exist is sent instead.
     """
-    status = 201
+    status = status.HTTP_201_CREATED
     default_detail = "Verification e-mail sent."
     default_code = "Created"
 
 
 class ServiceUnavailable(APIException):
     """For third party API service"""
-    status = 503
+    status = status.HTTP_503_SERVICE_UNAVAILABLE
     default_detail = "Service unavailable, please contact support if error persists."
     default_code = "Service Unavailable"
+
+
+class UniqueOrderNumberError(APIException):
+    """Error when generating Order number"""
+    status = status.HTTP_500_INTERNAL_SERVER_ERROR
+    default_detail = "Error while generating unique order number"
+    default_code = "Unique Order Number Error"

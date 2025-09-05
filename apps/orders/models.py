@@ -9,6 +9,7 @@ from django.db.models import Sum
 from apps.products.models import Product
 from apps.discounts.models import Discounts
 from common.utils.generate_unique_id import generate_unique_id
+from common.utils.custom_exceptions import UniqueOrderNumberError
 
 
 class Order(models.Model):
@@ -49,7 +50,6 @@ class Order(models.Model):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
     applied_discount = models.ForeignKey(Discounts, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders_applied")
     """for general order discount"""
-    # TODO: validate that the discount can be added order wide and on specific item
 
     class Meta:
         verbose_name = "Order"
@@ -65,16 +65,19 @@ class Order(models.Model):
 
         try:
             max_retries = 5
-            for _ in range(max_retries):
+            for _ in range(max_retries-1):
+                """retry 4 times if collission occures while generating unique id"""
                 try:
                     with transaction.atomic():
                         return super().save(*args, **kwargs)
                 except IntegrityError as e:
                     if str(e) == "UNIQUE constraint failed: orders_order.order_number":
                         self.order_number = generate_unique_id()
+            """retry the 5th time"""
+            return super().save(*args, **kwargs)
         except IntegrityError as e:
             if str(e) == "UNIQUE constraint failed: orders_order.order_number":
-                raise e # TODO: use a custom exception here to raise for unique id
+                raise UniqueOrderNumberError
             raise e
     
     @property
@@ -201,8 +204,3 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"[OrderItem] {self.quantity} x {self.product.name}"
-
-
-# TODO: add delivery option (door delivery, pickup)
-# TODO: add store locations for pickup
-# TODO: payment option (pay on delivery option, delivery fee can still be there but reduced)
